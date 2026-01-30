@@ -109,18 +109,11 @@ const App = () => {
   }, []);
 
   const generateViaAI = async (topic) => {
-    // We use the apiKey variable which is injected by the environment.
-    // In a local Vite environment, this would be replaced by the literal key or an env variable.
-    const effectiveApiKey = apiKey;
-
-    if (!effectiveApiKey) {
-      throw new Error("API Key is missing. If you are deploying to Vercel, please ensure you have hardcoded the key or injected it via the build process.");
-    }
-
+    // Note: Do not add API key validation logic as the key is injected at runtime
     const systemPrompt = `You are an expert FBLA competitive events coordinator. Generate 50 high-quality MCQs for the topic: "${topic}". Return ONLY a JSON array of objects with keys: question, options (array of 4 strings), correctAnswer (index 0-3), and explanation.`;
     
     const makeRequest = async () => {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${effectiveApiKey}`, {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
