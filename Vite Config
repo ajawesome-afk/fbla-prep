@@ -1,0 +1,8 @@
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+// This "base" setting is CRITICAL for hosting on a subfolder like /fbla/
+export default defineConfig({
+  plugins: [react()],
+  base: '/fbla/', 
+})
