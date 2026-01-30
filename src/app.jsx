@@ -79,7 +79,7 @@ const App = () => {
   const timerRef = useRef(null);
   
   // The execution environment provides the key at runtime.
-  const apiKey = "";
+  const apiKey = ""; 
 
   useEffect(() => {
     if (!auth) {
@@ -109,10 +109,18 @@ const App = () => {
   }, []);
 
   const generateViaAI = async (topic) => {
+    // We use the apiKey variable which is injected by the environment.
+    // In a local Vite environment, this would be replaced by the literal key or an env variable.
+    const effectiveApiKey = apiKey;
+
+    if (!effectiveApiKey) {
+      throw new Error("API Key is missing. If you are deploying to Vercel, please ensure you have hardcoded the key or injected it via the build process.");
+    }
+
     const systemPrompt = `You are an expert FBLA competitive events coordinator. Generate 50 high-quality MCQs for the topic: "${topic}". Return ONLY a JSON array of objects with keys: question, options (array of 4 strings), correctAnswer (index 0-3), and explanation.`;
     
     const makeRequest = async () => {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${effectiveApiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -134,7 +142,7 @@ const App = () => {
     };
 
     let delay = 1000;
-    // Exponential backoff
+    // Exponential backoff for API calls
     for (let i = 0; i <= 5; i++) {
       try {
         return await makeRequest();
@@ -169,7 +177,6 @@ const App = () => {
     try {
       if (db) {
         try {
-          // RULE 1: Strict Paths - sanitized appId ensures correct segment count
           const questionsRef = collection(db, 'artifacts', appId, 'public', 'data', 'fbla_questions');
           const querySnapshot = await getDocs(questionsRef);
           const allQuestions = querySnapshot.docs
@@ -193,7 +200,7 @@ const App = () => {
       setQuestions(newQuestions);
       startTest();
     } catch (err) {
-      console.error(err);
+      console.error("Fetch/Generation error:", err);
       setIsError(true);
       setErrorMessage(err.message || "An unexpected error occurred while loading questions.");
     } finally {
@@ -234,12 +241,12 @@ const App = () => {
 
   const handleDownloadScore = () => {
     const score = calculateScore();
-    const content = `FBLA Score Report\nTopic: ${selectedTopic}\nScore: ${score} / 50\nDate: ${new Date().toLocaleString()}`;
+    const content = `FBLA Score Report\nTopic: ${selectedTopic}\nScore: ${score} / ${questions.length}\nDate: ${new Date().toLocaleString()}`;
     const blob = new Blob([content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `FBLA_Score_${selectedTopic}.txt`;
+    a.download = `FBLA_Score_${selectedTopic.replace(/\s+/g, '_')}.txt`;
     a.click();
   };
 
@@ -248,7 +255,7 @@ const App = () => {
   };
 
   const resetPortal = () => {
-    clearInterval(timerRef.current);
+    if (timerRef.current) clearInterval(timerRef.current);
     setView('landing');
     setQuestions([]);
     setCurrentQuestionIndex(0);
@@ -277,7 +284,6 @@ const App = () => {
               </div>
             )}
             
-            {/* Connectivity Indicator */}
             <div className="flex items-center gap-2">
               {firebaseStatus === 'connecting' && (
                 <div className="flex items-center gap-1.5 px-3 py-1 bg-slate-100 rounded-full text-slate-500 text-xs font-bold uppercase tracking-wider animate-pulse">
@@ -305,9 +311,10 @@ const App = () => {
       <main className="max-w-4xl mx-auto px-6 py-12">
         {view === 'landing' && (
           <div className="text-center animate-in fade-in duration-500">
-            <h2 className="text-4xl font-extrabold mb-4">FBLA Mastery Portal</h2>
-            <p className="text-slate-600 mb-8 max-w-lg mx-auto">Prepare for your competitive events with custom generated tests or official question banks.</p>
+            <h2 className="text-4xl font-extrabold mb-4 text-slate-900">FBLA Mastery Portal</h2>
+            <p className="text-slate-600 mb-8 max-w-lg mx-auto">Prepare for your competitive events with custom generated tests or our shared question bank.</p>
             <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 max-w-md mx-auto text-left">
+              <label className="block text-sm font-semibold text-slate-700 mb-2">Select Event Topic</label>
               <select className="w-full p-3 border rounded-xl mb-6 outline-none focus:ring-2 focus:ring-blue-500" value={selectedTopic} onChange={(e) => setSelectedTopic(e.target.value)}>
                 <option value="">-- Choose Topic --</option>
                 {FBLA_TOPICS.map(t => <option key={t} value={t}>{t}</option>)}
@@ -323,10 +330,10 @@ const App = () => {
             {isLoading ? (
               <div className="flex flex-col items-center gap-4">
                 <RefreshCw className="w-16 h-16 text-blue-600 animate-spin" />
-                <p className="font-bold text-slate-500 tracking-wide uppercase">Assembling Event Questions...</p>
+                <p className="font-bold text-slate-500 tracking-wide uppercase">Assembling Questions...</p>
               </div>
             ) : (
-              <div className="bg-white p-10 rounded-2xl shadow-xl max-w-lg mx-auto">
+              <div className="bg-white p-10 rounded-2xl shadow-xl max-w-lg mx-auto border border-slate-100">
                 <h3 className="text-2xl font-bold mb-2 text-slate-800">{selectedTopic}</h3>
                 <p className="text-slate-500 mb-8">50 Questions • {testMode === 'timed' ? '25 Minutes' : 'Untimed'}</p>
                 
@@ -334,14 +341,14 @@ const App = () => {
                   <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm flex items-start gap-3 text-left">
                     <AlertCircle className="w-5 h-5 flex-shrink-0" />
                     <div>
-                      <p className="font-bold mb-1">Failed to load questions</p>
-                      <p>{errorMessage}</p>
+                      <p className="font-bold mb-1 text-red-800 uppercase tracking-wide text-xs">Configuration Error</p>
+                      <p className="opacity-90 leading-relaxed">{errorMessage}</p>
                     </div>
                   </div>
                 )}
                 
                 <button onClick={() => fetchQuestions(selectedTopic)} className="w-full py-4 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-lg">
-                  {isError ? "Try Again" : "Start Now"}
+                  {isError ? "Try Again" : "Start Session"}
                 </button>
                 <button onClick={() => setView('landing')} className="mt-4 text-slate-400 font-bold hover:text-slate-600">Cancel</button>
               </div>
@@ -374,21 +381,21 @@ const App = () => {
             </div>
             <div className="flex justify-between items-center text-slate-400 font-bold px-2">
               <button onClick={() => setCurrentQuestionIndex(c => Math.max(0, c-1))} disabled={showFeedback || currentQuestionIndex === 0} className="hover:text-slate-700 disabled:opacity-30">Previous</button>
-              <span className="bg-slate-200 text-slate-600 px-3 py-1 rounded-full text-xs">Question {currentQuestionIndex + 1} / {questions.length}</span>
+              <span className="bg-slate-200 text-slate-600 px-3 py-1 rounded-full text-xs font-mono">Question {currentQuestionIndex + 1} / {questions.length}</span>
               <button onClick={() => setView('results')} className="text-red-400 hover:text-red-600">Finish Early</button>
             </div>
           </div>
         )}
 
         {view === 'results' && (
-          <div className="bg-white p-12 rounded-3xl shadow-xl text-center max-w-2xl mx-auto animate-in zoom-in-95 duration-500">
+          <div className="bg-white p-12 rounded-3xl shadow-xl text-center max-w-2xl mx-auto animate-in zoom-in-95 duration-500 border border-slate-100">
             <Trophy className="w-20 h-20 text-blue-600 mx-auto mb-6" />
-            <h2 className="text-3xl font-black mb-2">Event Result</h2>
+            <h2 className="text-3xl font-black mb-2 text-slate-900">Event Result</h2>
             <p className="text-slate-500 mb-8 uppercase tracking-widest text-sm font-bold">{selectedTopic}</p>
             <div className="text-7xl font-black text-blue-600 mb-10">{calculateScore()} <span className="text-2xl text-slate-300">/ {questions.length}</span></div>
             <div className="grid grid-cols-2 gap-4 mb-8">
-              <button onClick={handleDownloadScore} className="flex items-center justify-center gap-2 bg-slate-100 p-4 rounded-xl font-bold hover:bg-slate-200 transition-all"><Download className="w-5 h-5" /> Download Report</button>
-              <button onClick={() => isSignedUp ? setView('review') : null} disabled={!isSignedUp} className="flex items-center justify-center gap-2 bg-blue-50 p-4 rounded-xl font-bold disabled:opacity-50 hover:bg-blue-100 transition-all text-blue-700"><Eye className="w-5 h-5" /> Detailed Review</button>
+              <button onClick={handleDownloadScore} className="flex items-center justify-center gap-2 bg-slate-100 p-4 rounded-xl font-bold hover:bg-slate-200 transition-all text-slate-700"><Download className="w-5 h-5" /> Download Report</button>
+              <button onClick={() => isSignedUp ? setView('review') : null} disabled={!isSignedUp} className="flex items-center justify-center gap-2 bg-blue-50 p-4 rounded-xl font-bold disabled:opacity-50 hover:bg-blue-100 transition-all text-blue-700 border border-blue-100"><Eye className="w-5 h-5" /> Detailed Review</button>
             </div>
             {!isSignedUp && (
               <div className="bg-[#003366] p-8 rounded-2xl text-white text-left shadow-lg relative overflow-hidden">
@@ -409,14 +416,14 @@ const App = () => {
         )}
 
         {view === 'review' && (
-          <div className="space-y-6 animate-in slide-in-from-bottom-8 duration-500">
-            <div className="flex items-center justify-between sticky top-20 bg-slate-50 py-4 z-40">
+          <div className="space-y-6 animate-in slide-in-from-bottom-8 duration-500 pb-20">
+            <div className="flex items-center justify-between sticky top-20 bg-slate-50/90 backdrop-blur-sm py-4 z-40">
               <button onClick={() => setView('results')} className="flex items-center gap-2 font-bold text-slate-500 hover:text-slate-800 bg-white px-4 py-2 rounded-lg border border-slate-200"><ArrowLeft className="w-5 h-5" /> Back to Results</button>
-              <div className="text-sm font-bold text-blue-900 bg-blue-50 px-4 py-2 rounded-lg border border-blue-100">Review Unlocked for {signupForm.name}</div>
+              <div className="text-sm font-bold text-blue-900 bg-blue-50 px-4 py-2 rounded-lg border border-blue-100">Session Review: {signupForm.name}</div>
             </div>
             {questions.map((q, idx) => (
               <div key={idx} className={`p-8 bg-white rounded-2xl border-l-8 shadow-sm ${userAnswers[idx] === q.correctAnswer ? 'border-green-500' : 'border-red-500'}`}>
-                <p className="font-bold mb-6 text-slate-800 text-lg">{idx + 1}. {q.question}</p>
+                <p className="font-bold mb-6 text-slate-800 text-lg leading-relaxed">{idx + 1}. {q.question}</p>
                 <div className="grid gap-3 text-sm mb-6">
                   {q.options.map((opt, oIdx) => {
                     let containerClass = "p-4 rounded-xl border-2 flex items-center justify-between ";
@@ -435,20 +442,20 @@ const App = () => {
                 </div>
                 <div className="p-4 bg-blue-50 rounded-xl border border-blue-100">
                   <div className="flex items-center gap-2 font-bold text-blue-900 mb-1 text-sm">
-                    <BookOpen className="w-4 h-4" /> Why this is the answer:
+                    <BookOpen className="w-4 h-4" /> Study Insight
                   </div>
-                  <p className="text-sm text-blue-800 leading-relaxed italic">{q.explanation}</p>
+                  <p className="text-sm text-blue-800 leading-relaxed italic opacity-90">{q.explanation}</p>
                 </div>
               </div>
             ))}
             <div className="text-center py-10">
-              <button onClick={resetPortal} className="bg-[#003366] text-white px-10 py-4 rounded-2xl font-black shadow-lg hover:bg-blue-800 transition-all">START A NEW EVENT</button>
+              <button onClick={resetPortal} className="bg-[#003366] text-white px-10 py-4 rounded-2xl font-black shadow-lg hover:bg-blue-800 transition-all uppercase tracking-widest text-sm">Return to Event List</button>
             </div>
           </div>
         )}
       </main>
       <footer className="text-center py-10 text-slate-400 text-xs">
-        <p>&copy; 2026 AahanJain.com/FBLA. Competitive Success Starts Here.</p>
+        <p>&copy; 2026 AahanJain.com/FBLA. Competitive Excellence through Practice.</p>
       </footer>
     </div>
   );
