@@ -35,7 +35,7 @@ const App = () => {
   const [showFeedback, setShowFeedback] = useState(false);
 
   const timerRef = useRef(null);
-  const apiKey = ""; // Set in Vercel environment variables as VITE_GEMINI_API_KEY
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY; // Set in Vercel environment variables as VITE_GEMINI_API_KEY
 
   const fetchQuestions = async (topic) => {
     setIsLoading(true);
