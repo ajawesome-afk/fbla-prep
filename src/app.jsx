@@ -42,14 +42,19 @@ const App = () => {
 
   const timerRef = useRef(null);
   
-  // The execution environment provides the key at runtime.
-  const apiKey = ""; 
+  /**
+   * API Key Configuration:
+   * The execution environment provides the key at runtime. 
+   * Always set to an empty string here to ensure compatibility with the preview environment.
+   */
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY; 
 
   const generateViaAI = async (topic) => {
     const systemPrompt = `You are an expert FBLA competitive events coordinator. Generate 50 high-quality MCQs for the topic: "${topic}". 
     Return ONLY a JSON array of objects with keys: question, options (array of 4 strings), correctAnswer (index 0-3), and explanation.`;
     
     const makeRequest = async () => {
+      // Use the apiKey variable which is provided by the execution environment at runtime
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -86,6 +91,7 @@ const App = () => {
       return JSON.parse(text);
     };
 
+    // Retry logic with exponential backoff
     let delay = 1000;
     for (let i = 0; i <= 5; i++) {
       try {
