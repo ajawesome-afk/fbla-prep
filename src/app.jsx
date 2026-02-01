@@ -230,7 +230,6 @@ const AdPlaceholder = () => (
   <div className="w-full h-32 my-8 rounded-xl border-2 border-dashed border-zinc-200 dark:border-zinc-800 flex flex-col items-center justify-center text-zinc-400 dark:text-zinc-600 relative overflow-hidden bg-zinc-50/50 dark:bg-zinc-900/50">
    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3202832198661338"
      crossorigin="anonymous"></script>
-<!-- FBLA1 -->
 <ins class="adsbygoogle"
      style="display:block"
      data-ad-client="ca-pub-3202832198661338"
