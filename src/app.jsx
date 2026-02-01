@@ -21,16 +21,19 @@ import {
 
 // --- Configuration ---
 // REPLACE THESE WITH YOUR ACTUAL KEYS
-const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE";
-
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+  
 const firebaseConfig = {
-  apiKey: "YOUR_FIREBASE_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "SENDER_ID",
-  appId: "APP_ID"
+  apiKey: "AIzaSyAJizcZjCwDS6zcJTHJW6JrjjLUx9WbG1M",
+  authDomain: "fbla-prep-portal.firebaseapp.com",
+  projectId: "fbla-prep-portal",
+  storageBucket: "fbla-prep-portal.firebasestorage.app",
+  messagingSenderId: "330555191340",
+  appId: "1:330555191340:web:c6fb3c12d3f1e3257e6189",
+  measurementId: "G-B9Z9DWPM7Q"
 };
+
+
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
