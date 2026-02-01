@@ -6,7 +6,10 @@ import {
   signInWithPopup, 
   GoogleAuthProvider, 
   onAuthStateChanged, 
-  signInAnonymously 
+  signInAnonymously,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut
 } from "firebase/auth";
 import { 
   getFirestore, 
@@ -20,9 +23,10 @@ import {
 } from "firebase/firestore";
 
 // --- Configuration ---
-// REPLACE THESE WITH YOUR ACTUAL KEYS
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-  
+// Note: Ensure you have a .env file with VITE_GEMINI_API_KEY=your_key
+// OR replace this directly with your key string if testing locally.
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || "YOUR_GEMINI_API_KEY_HERE";
+
 const firebaseConfig = {
   apiKey: "AIzaSyAJizcZjCwDS6zcJTHJW6JrjjLUx9WbG1M",
   authDomain: "fbla-prep-portal.firebaseapp.com",
@@ -32,8 +36,6 @@ const firebaseConfig = {
   appId: "1:330555191340:web:c6fb3c12d3f1e3257e6189",
   measurementId: "G-B9Z9DWPM7Q"
 };
-
-
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
@@ -57,7 +59,6 @@ const FBLA_TOPICS = [
 
 // Dynamic Icon Component for Lucide-React
 const Icon = ({ name, className = "", size = 20 }) => {
-  // Convert kebab-case (message-square) to PascalCase (MessageSquare)
   const pascalName = name
     .split('-')
     .map(part => part.charAt(0).toUpperCase() + part.slice(1))
@@ -65,10 +66,7 @@ const Icon = ({ name, className = "", size = 20 }) => {
     
   const LucideIcon = LucideIcons[pascalName];
 
-  if (!LucideIcon) {
-    console.warn(`Icon ${name} not found`);
-    return null;
-  }
+  if (!LucideIcon) return null;
 
   return <LucideIcon size={size} className={className} />;
 };
@@ -152,14 +150,15 @@ const SearchableSelect = ({ options, value, onChange, placeholder = "Select..." 
   );
 };
 
-const Button = ({ children, onClick, variant = 'primary', className = "", disabled = false }) => {
+const Button = ({ children, onClick, variant = 'primary', className = "", disabled = false, type = "button" }) => {
   const base = "px-6 py-4 rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2 active:scale-95 text-sm tracking-wide";
   const variants = {
     primary: "bg-gradient-to-br from-zinc-800 to-black dark:from-zinc-100 dark:to-zinc-300 text-white dark:text-black shadow-lg shadow-zinc-200 dark:shadow-zinc-900/50 hover:shadow-xl disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed",
     secondary: "bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-800",
-    ghost: "text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800"
+    ghost: "text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800",
+    google: "bg-white text-zinc-700 border border-zinc-200 hover:bg-zinc-50 hover:border-zinc-300 shadow-sm"
   };
-  return <button onClick={onClick} disabled={disabled} className={`${base} ${variants[variant]} ${className}`}>{children}</button>;
+  return <button type={type} onClick={onClick} disabled={disabled} className={`${base} ${variants[variant]} ${className}`}>{children}</button>;
 };
 
 const Modal = ({ isOpen, onClose, title, children }) => {
@@ -215,6 +214,12 @@ const Sidebar = ({ isOpen, onClose, user, history, onLoadTopic }) => {
               )}
             </div>
           )}
+          
+          {user && !user.isAnonymous && (
+             <button onClick={() => signOut(auth)} className="mt-auto w-full py-3 bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors">
+                <Icon name="log-out" size={18} /> Sign Out
+             </button>
+          )}
         </div>
       </div>
     </>
@@ -226,7 +231,17 @@ const Sidebar = ({ isOpen, onClose, user, history, onLoadTopic }) => {
 export default function App() {
   // State
   const [showSplash, setShowSplash] = useState(true);
-  const [theme, setTheme] = useState('light');
+  
+  // Theme State
+  const [theme, setTheme] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme) return savedTheme;
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    return 'light';
+  });
+
   const [view, setView] = useState('landing');
   const [user, setUser] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -235,8 +250,20 @@ export default function App() {
   const [history, setHistory] = useState([]);
   const [toast, setToast] = useState(null);
   
+  // Login Modal State
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isSignUp, setIsSignUp] = useState(false);
+  
   // Quiz Config & State
-  const [config, setConfig] = useState({ topic: '', mode: 'practice', questionCount: 20, duration: 25 });
+  const [config, setConfig] = useState({ 
+    topic: '', 
+    mode: 'practice', 
+    questionCount: 20, 
+    duration: 25,
+    difficulty: 'Hard' // Added Difficulty
+  });
   const [quizData, setQuizData] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState({});
@@ -244,6 +271,17 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [showExplanation, setShowExplanation] = useState(false);
+
+  // Apply Theme Effect
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+    localStorage.setItem('theme', theme);
+  }, [theme]);
 
   // Show Toast Helper
   const showToast = (msg, type = 'info') => {
@@ -283,18 +321,39 @@ export default function App() {
     return () => unsubscribeAuth();
   }, []);
 
-  const handleLogin = async () => {
+  // Separate Login Handlers
+  const handleGoogleLogin = async () => {
     try {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
+      setLoginModalOpen(false);
+      showToast("Signed in with Google");
     } catch (err) {
       if (err.code === 'auth/unauthorized-domain') {
-        showToast("Preview Mode: Continued as Guest", 'info');
+        showToast("Preview Mode: Domain unauthorized", 'info');
       } else {
-        console.error("Auth Error", err);
-        showToast("Login failed. Continuing as Guest.", 'error');
+        console.error("Google Auth Error", err);
+        showToast("Google Sign-In failed.", 'error');
       }
-      if (!auth.currentUser) await signInAnonymously(auth);
+    }
+  };
+
+  const handleEmailAuth = async (e) => {
+    e.preventDefault();
+    try {
+      if (isSignUp) {
+        await createUserWithEmailAndPassword(auth, email, password);
+        showToast("Account created!");
+      } else {
+        await signInWithEmailAndPassword(auth, email, password);
+        showToast("Signed in successfully");
+      }
+      setLoginModalOpen(false);
+      setEmail('');
+      setPassword('');
+    } catch (err) {
+      console.error("Email Auth Error", err);
+      showToast(err.message, 'error');
     }
   };
 
@@ -323,6 +382,7 @@ export default function App() {
         score: score,
         total: quizData.length,
         mode: config.mode,
+        difficulty: config.difficulty,
         date: serverTimestamp()
       });
     } catch (e) { console.error("Save error", e); }
@@ -330,20 +390,24 @@ export default function App() {
 
   // Theme toggle
   const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
-    if (newTheme === 'dark') document.documentElement.classList.add('dark');
-    else document.documentElement.classList.remove('dark');
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
 
   // Quiz Logic
   const generateQuiz = async () => {
+    if (!GEMINI_API_KEY || GEMINI_API_KEY.includes("YOUR_")) {
+        showToast("API Key Missing! Check code.", "error");
+        return;
+    }
+
     setIsLoading(true);
     setView('loading');
     setErrorMsg('');
     
     const fetchWithRetry = async (retries = 3, delay = 1000) => {
-      const systemPrompt = `Create a hard, competition-level practice test for FBLA "${config.topic}". Generate exactly ${config.questionCount} multiple choice questions. Return ONLY raw JSON. Schema: Array<{ question: string, options: string[], correctAnswerIndex: number, explanation: string }>`;
+      // Updated Prompt to use Difficulty
+      const systemPrompt = `Create a ${config.difficulty.toLowerCase()} difficulty, competition-level practice test for FBLA "${config.topic}". Generate exactly ${config.questionCount} multiple choice questions. Return ONLY raw JSON. Schema: Array<{ question: string, options: string[], correctAnswerIndex: number, explanation: string }>. IMPORTANT: Keep the explanation short, simple, and engaging (max 2 sentences). Avoid long, boring paragraphs.`;
+      
       try {
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`, {
           method: 'POST',
@@ -437,23 +501,50 @@ export default function App() {
               <SearchableSelect options={FBLA_TOPICS} value={config.topic} onChange={(val) => setConfig({...config, topic: val})} placeholder="Type topic (e.g. 'Network')..." />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              {[{ id: 'practice', icon: 'zap', label: 'Practice' }, { id: 'timed', icon: 'clock', label: 'Ranked' }].map(m => (
-                <button 
-                  key={m.id}
-                  onClick={() => setConfig({ ...config, mode: m.id })}
-                  className={`p-4 rounded-xl border text-left transition-all duration-200 group relative overflow-hidden ${
-                    config.mode === m.id 
-                    ? 'border-zinc-900 dark:border-zinc-100 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-xl' 
-                    : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-700'
-                  }`}
-                >
-                  <div className="relative z-10 flex flex-col gap-2">
-                    <div className={`mb-1 ${config.mode === m.id ? 'opacity-100' : 'opacity-60'}`}><Icon name={m.icon} size={22} /></div>
-                    <div className="font-bold text-base tracking-tight">{m.label}</div>
-                  </div>
-                </button>
-              ))}
+            {/* Mode & Difficulty Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+               {/* Mode Selection */}
+               <div>
+                 <label className="block text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest ml-1 mb-2">Mode</label>
+                 <div className="grid grid-cols-2 gap-2">
+                    {[{ id: 'practice', icon: 'zap', label: 'Practice' }, { id: 'timed', icon: 'clock', label: 'Ranked' }].map(m => (
+                      <button 
+                        key={m.id}
+                        onClick={() => setConfig({ ...config, mode: m.id })}
+                        className={`p-3 rounded-xl border text-center transition-all duration-200 ${
+                          config.mode === m.id 
+                          ? 'border-zinc-900 dark:border-zinc-100 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-lg' 
+                          : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-700'
+                        }`}
+                      >
+                        <div className="flex flex-col items-center gap-1">
+                          <Icon name={m.icon} size={18} className={config.mode === m.id ? 'opacity-100' : 'opacity-60'} />
+                          <span className="font-bold text-xs">{m.label}</span>
+                        </div>
+                      </button>
+                    ))}
+                 </div>
+               </div>
+
+               {/* Difficulty Selection */}
+               <div>
+                 <label className="block text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest ml-1 mb-2">Difficulty</label>
+                 <div className="grid grid-cols-3 gap-2">
+                    {['Easy', 'Medium', 'Hard'].map(d => (
+                      <button 
+                        key={d}
+                        onClick={() => setConfig({ ...config, difficulty: d })}
+                        className={`p-3 rounded-xl border text-center transition-all duration-200 ${
+                          config.difficulty === d 
+                          ? 'border-zinc-900 dark:border-zinc-100 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-lg' 
+                          : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-700'
+                        }`}
+                      >
+                        <span className="font-bold text-xs">{d}</span>
+                      </button>
+                    ))}
+                 </div>
+               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
@@ -491,7 +582,7 @@ export default function App() {
         <div className="absolute inset-0 flex items-center justify-center animate-pulse"><Icon name="cpu" size={32} className="text-zinc-400" /></div>
       </div>
       <h2 className="text-2xl font-bold text-zinc-900 dark:text-white mb-3">Synthesizing</h2>
-      <p className="text-zinc-500 dark:text-zinc-400 font-medium">Generating {config.questionCount} items for <span className="text-zinc-900 dark:text-zinc-200">{config.topic}</span></p>
+      <p className="text-zinc-500 dark:text-zinc-400 font-medium">Generating {config.difficulty} questions for <span className="text-zinc-900 dark:text-zinc-200">{config.topic}</span></p>
       <div className="mt-12 space-y-3 w-72">
         {[1,2,3].map(i => <div key={i} className="h-2 rounded-full shimmer-bg w-full opacity-60" style={{ animationDelay: `${i * 0.15}s` }}></div>)}
       </div>
@@ -634,7 +725,7 @@ export default function App() {
                 {user.displayName ? user.displayName[0] : 'U'}
               </button>
             ) : (
-              <button onClick={handleLogin} className="px-4 py-2 bg-zinc-900 dark:bg-white text-white dark:text-black rounded-lg text-sm font-bold shadow-lg hover:opacity-90 transition-opacity flex items-center gap-2">
+              <button onClick={() => setLoginModalOpen(true)} className="px-4 py-2 bg-zinc-900 dark:bg-white text-white dark:text-black rounded-lg text-sm font-bold shadow-lg hover:opacity-90 transition-opacity flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
                 {user ? "Guest (Sign In)" : "Login"}
               </button>
@@ -644,6 +735,7 @@ export default function App() {
 
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} user={user} history={history} onLoadTopic={(t) => { setConfig({...config, topic: t}); setSidebarOpen(false); }} />
       
+      {/* Feedback Modal */}
       <Modal isOpen={feedbackOpen} onClose={() => setFeedbackOpen(false)} title="Send Feedback">
         <textarea 
           value={feedbackText}
@@ -652,6 +744,52 @@ export default function App() {
           placeholder="What can we improve?..."
         />
         <Button onClick={handleFeedbackSubmit} className="w-full py-3">Submit Feedback</Button>
+      </Modal>
+
+      {/* Login Modal */}
+      <Modal isOpen={loginModalOpen} onClose={() => setLoginModalOpen(false)} title="Sign In">
+        <div className="space-y-4">
+          <Button variant="google" onClick={handleGoogleLogin} className="w-full py-3 flex items-center justify-center gap-3">
+            <svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg"><g transform="matrix(1, 0, 0, 1, 27.009001, -39.238998)"><path fill="#4285F4" d="M -3.264 51.509 C -3.264 50.719 -3.334 49.969 -3.454 49.239 L -14.754 49.239 L -14.754 53.749 L -8.284 53.749 C -8.574 55.229 -9.424 56.479 -10.684 57.329 L -10.684 60.329 L -6.824 60.329 C -4.564 58.239 -3.264 55.159 -3.264 51.509 Z"/><path fill="#34A853" d="M -14.754 63.239 C -11.514 63.239 -8.804 62.159 -6.824 60.329 L -10.684 57.329 C -11.764 58.049 -13.134 58.489 -14.754 58.489 C -17.884 58.489 -20.534 56.379 -21.484 53.529 L -25.464 53.529 L -25.464 56.619 C -23.494 60.539 -19.444 63.239 -14.754 63.239 Z"/><path fill="#FBBC05" d="M -21.484 53.529 C -21.734 52.809 -21.864 52.039 -21.864 51.239 C -21.864 50.439 -21.724 49.669 -21.484 48.949 L -21.484 45.859 L -25.464 45.859 C -26.284 47.479 -26.754 49.299 -26.754 51.239 C -26.754 53.179 -26.284 54.999 -25.464 56.619 L -21.484 53.529 Z"/><path fill="#EA4335" d="M -14.754 43.989 C -12.984 43.989 -11.404 44.599 -10.154 45.789 L -6.734 42.369 C -8.804 40.429 -11.514 39.239 -14.754 39.239 C -19.444 39.239 -23.494 41.939 -25.464 45.859 L -21.484 48.949 C -20.534 46.099 -17.884 43.989 -14.754 43.989 Z"/></g></svg>
+            Sign in with Google
+          </Button>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-zinc-200 dark:border-zinc-700"></div></div>
+            <div className="relative flex justify-center text-sm"><span className="px-2 bg-white dark:bg-zinc-900 text-zinc-500">Or continue with email</span></div>
+          </div>
+
+          <form onSubmit={handleEmailAuth} className="space-y-3">
+            <input 
+              type="email" 
+              placeholder="Email" 
+              value={email} 
+              onChange={e => setEmail(e.target.value)} 
+              required
+              className="w-full p-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white dark:text-white"
+            />
+            <input 
+              type="password" 
+              placeholder="Password" 
+              value={password} 
+              onChange={e => setPassword(e.target.value)} 
+              required
+              className="w-full p-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white dark:text-white"
+            />
+            <Button type="submit" className="w-full py-3">
+              {isSignUp ? 'Sign Up with Email' : 'Sign In with Email'}
+            </Button>
+          </form>
+          
+          <div className="text-center">
+            <button 
+              onClick={() => setIsSignUp(!isSignUp)}
+              className="text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-white underline"
+            >
+              {isSignUp ? 'Already have an account? Sign In' : 'Need an account? Sign Up'}
+            </button>
+          </div>
+        </div>
       </Modal>
 
       <main className="flex-grow flex flex-col">
