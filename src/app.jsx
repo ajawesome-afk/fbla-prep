@@ -232,17 +232,7 @@ const AdPlaceholder = () => (
     <span className="text-xs font-bold tracking-[0.2em] uppercase opacity-70">Advertisement</span>
     <span className="text-[10px] opacity-50 mt-1">Place your ad content here</span>
   
-   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3202832198661338"
-     crossorigin="anonymous"></script>
-<ins class="adsbygoogle"
-     style="display:block"
-     data-ad-client="ca-pub-3202832198661338"
-     data-ad-slot="7069592065"
-     data-ad-format="auto"
-     data-full-width-responsive="true"></ins>
-<script>
-     (adsbygoogle = window.adsbygoogle || []).push({});
-</script>
+   
   </div>
 );
 
