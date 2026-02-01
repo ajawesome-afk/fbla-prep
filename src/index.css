@@ -2,13 +2,62 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Add some smooth transitions for a better feel */
-button {
-  transition: all 0.2s ease-in-out;
+@layer utilities {
+    .animate-enter {
+        animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    
+    .animate-float {
+        animation: float 6s ease-in-out infinite;
+    }
+
+    .shimmer-bg {
+        background-image: linear-gradient(to right, var(--shimmer-bg) 0%, var(--shimmer-highlight) 20%, var(--shimmer-bg) 40%, var(--shimmer-bg) 100%);
+        background-repeat: no-repeat;
+        background-size: 2000px 100%;
+        animation: shimmer 1.5s infinite linear;
+    }
+
+    .hover-gradient-dark:hover {
+        background: linear-gradient(135deg, #18181b 0%, #27272a 100%);
+    }
+
+    .hover-gradient-light:hover {
+        background: linear-gradient(135deg, #f4f4f5 0%, #ffffff 100%);
+    }
+    
+    .animate-grow-line {
+        animation: growLine 1s ease-out forwards 0.5s;
+    }
 }
 
-body {
-  margin: 0;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* Base Variables */
+:root {
+    --shimmer-bg: #f4f4f5;
+    --shimmer-highlight: #e4e4e7;
+}
+
+.dark {
+    --shimmer-bg: #27272a;
+    --shimmer-highlight: #3f3f46;
+}
+
+/* Keyframes */
+@keyframes slideUpFade {
+    from { opacity: 0; transform: translateY(20px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes shimmer {
+    0% { background-position: -1000px 0; }
+    100% { background-position: 1000px 0; }
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+@keyframes growLine {
+    to { width: 100px; }
 }
