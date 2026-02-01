@@ -226,6 +226,13 @@ const Sidebar = ({ isOpen, onClose, user, history, onLoadTopic }) => {
   );
 };
 
+const AdPlaceholder = () => (
+  <div className="w-full h-32 my-8 rounded-xl border-2 border-dashed border-zinc-200 dark:border-zinc-800 flex flex-col items-center justify-center text-zinc-400 dark:text-zinc-600 relative overflow-hidden bg-zinc-50/50 dark:bg-zinc-900/50">
+    <span className="text-xs font-bold tracking-[0.2em] uppercase opacity-70">Advertisement</span>
+    <span className="text-[10px] opacity-50 mt-1">Place your ad content here</span>
+  </div>
+);
+
 // --- Main App ---
 
 export default function App() {
@@ -571,6 +578,7 @@ export default function App() {
           </div>
         </div>
       </div>
+      <AdPlaceholder />
     </div>
   );
 
@@ -649,6 +657,8 @@ export default function App() {
           </div>
         )}
 
+        <AdPlaceholder />
+
         <div className="fixed bottom-0 left-0 w-full bg-white/90 dark:bg-zinc-950/90 backdrop-blur-xl border-t border-zinc-200 dark:border-zinc-800 py-5 px-6 z-30 transition-colors duration-300">
           <div className="max-w-3xl mx-auto flex items-center justify-between">
             <div className="absolute top-0 left-0 h-[3px] bg-zinc-900 dark:bg-zinc-100 transition-all duration-500 ease-out" style={{ width: `${progress}%` }}></div>
@@ -687,6 +697,7 @@ export default function App() {
           <Button variant="secondary" onClick={() => { setView('testing'); setCurrentIndex(0); setShowExplanation(true); }} className="py-4">Review</Button>
           <Button onClick={resetApp} className="py-4">New Session</Button>
         </div>
+        <AdPlaceholder />
       </div>
     );
   };
