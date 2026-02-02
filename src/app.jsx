@@ -97,7 +97,7 @@ const App = () => {
   const [history, setHistory] = useState([]);
 
   const timerRef = useRef(null);
-  const apiKey = ""; // Runtime provides this
+  //const apiKey = ""; // Runtime provides this
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY; 
 
   // RULE 3: Auth first, then set up listeners
