@@ -53,15 +53,7 @@ const FBLA_TOPICS = [
 ];
 
 // --- FIREBASE INITIALIZATION ---
-const firebaseConfig = {
-  apiKey: "AIzaSyAJizcZjCwDS6zcJTHJW6JrjjLUx9WbG1M",
-  authDomain: "fbla-prep-portal.firebaseapp.com",
-  projectId: "fbla-prep-portal",
-  storageBucket: "fbla-prep-portal.firebasestorage.app",
-  messagingSenderId: "330555191340",
-  appId: "1:330555191340:web:c6fb3c12d3f1e3257e6189",
-  measurementId: "G-B9Z9DWPM7Q"
-};
+const firebaseConfig = import.meta.env.FIREBASE_CONFIG;
 
 let auth, db, appId;
 
