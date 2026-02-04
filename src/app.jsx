@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import * as LucideIcons from 'lucide-react';
 import { initializeApp } from "firebase/app";
 import { 
@@ -24,10 +24,22 @@ import {
 } from "firebase/firestore";
 
 // --- Configuration ---
-const firebaseConfig = import.meta.env.FIREBASE_CONFIG;
+/**
+ * Platform Environment Variables
+ * The 'apiKey' is set to an empty string to allow the execution environment 
+ * to securely inject the Gemini API key at runtime.
+ * 'firebaseConfig' is parsed from the environment-provided global variable.
+ */
+//const firebaseConfig = JSON.parse(__firebase_config);
 
 const appId = typeof __app_id !== 'undefined' ? __app_id : 'fbla-prep-v1';
+
+// --- Configuration ---
+const firebaseConfig = import.meta.env.FIREBASE_CONFIG;
+
+//const appId = typeof __app_id !== 'undefined' ? __app_id : 'fbla-prep-v1';
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY; // Provided by environment
+
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
@@ -46,7 +58,7 @@ const FBLA_TOPICS = [
   "UX Design", "Website Design"
 ];
 
-// --- Shared Components ---
+// --- Shared UI Components ---
 
 const Icon = ({ name, className = "", size = 20 }) => {
   const pascalName = name
@@ -75,7 +87,7 @@ const Modal = ({ isOpen, onClose, title, children }) => {
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose}></div>
-      <div className="relative bg-white dark:bg-zinc-900 w-full max-w-md rounded-2xl p-6 shadow-2xl animate-enter border border-zinc-200 dark:border-zinc-800">
+      <div className="relative bg-white dark:bg-zinc-900 w-full max-w-md rounded-2xl p-6 shadow-2xl border border-zinc-200 dark:border-zinc-800">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-xl font-bold text-zinc-900 dark:text-white">{title}</h3>
           <button onClick={onClose} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full"><Icon name="x" size={20} /></button>
@@ -124,7 +136,7 @@ const SearchableSelect = ({ options, value, onChange, placeholder = "Select..." 
         </div>
       </div>
       {isOpen && (
-        <div className="absolute z-50 w-full mt-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-xl max-h-60 overflow-y-auto overflow-hidden animate-enter">
+        <div className="absolute z-50 w-full mt-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-xl max-h-60 overflow-y-auto overflow-hidden">
           {filteredOptions.length > 0 ? (
             filteredOptions.map((opt) => (
               <div
@@ -143,68 +155,7 @@ const SearchableSelect = ({ options, value, onChange, placeholder = "Select..." 
   );
 };
 
-// --- App Sub-Views (Moved out of App to prevent re-creation bugs) ---
-
-const LandingView = ({ config, setConfig, errorMsg, generateQuiz }) => (
-  <div className="max-w-4xl mx-auto w-full px-6 pt-12 md:pt-20 animate-enter pb-32">
-    <div className="text-center mb-16">
-      <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-zinc-900 dark:text-white mb-6">Master your event.</h1>
-      <p className="text-xl text-zinc-500 dark:text-zinc-400 max-w-lg mx-auto leading-relaxed font-light">Configure your custom simulation environment.</p>
-    </div>
-
-    <div className="grid md:grid-cols-12 gap-8">
-      <div className="md:col-start-3 md:col-span-8 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-8 shadow-xl shadow-zinc-200/50 dark:shadow-black/50 transition-all">
-        {errorMsg && (
-          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm rounded-xl border border-red-100 dark:border-red-900/30 flex items-center gap-3">
-            <Icon name="alert-triangle" size={18} /> {errorMsg}
-          </div>
-        )}
-        
-        <div className="space-y-8">
-          <div className="space-y-3">
-            <label className="block text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest ml-1">Topic</label>
-            <SearchableSelect options={FBLA_TOPICS} value={config.topic} onChange={(val) => setConfig({...config, topic: val})} placeholder="Type topic..." />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-             <div>
-               <label className="block text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest ml-1 mb-2">Mode</label>
-               <div className="grid grid-cols-2 gap-2">
-                  {[{ id: 'practice', icon: 'zap', label: 'Practice' }, { id: 'timed', icon: 'clock', label: 'Ranked' }].map(m => (
-                    <button 
-                      key={m.id}
-                      onClick={() => setConfig({ ...config, mode: m.id })}
-                      className={`p-3 rounded-xl border text-center transition-all ${config.mode === m.id ? 'border-zinc-900 dark:border-zinc-100 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900' : 'border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400'}`}
-                    >
-                      <div className="flex flex-col items-center gap-1">
-                        <Icon name={m.icon} size={18} />
-                        <span className="font-bold text-xs">{m.label}</span>
-                      </div>
-                    </button>
-                  ))}
-               </div>
-             </div>
-
-             <div>
-               <label className="block text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest ml-1 mb-2">Difficulty</label>
-               <div className="grid grid-cols-3 gap-2">
-                  {['Easy', 'Medium', 'Hard'].map(d => (
-                    <button key={d} onClick={() => setConfig({ ...config, difficulty: d })} className={`p-3 rounded-xl border text-center transition-all ${config.difficulty === d ? 'border-zinc-900 dark:border-zinc-100 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900' : 'border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400'}`}>
-                      <span className="font-bold text-xs">{d}</span>
-                    </button>
-                  ))}
-               </div>
-             </div>
-          </div>
-
-          <Button onClick={generateQuiz} disabled={!config.topic} className="w-full py-5 text-base mt-4">Initialize Session <Icon name="arrow-right" size={18} /></Button>
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
-// --- Main App ---
+// --- Main Application ---
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -244,7 +195,7 @@ export default function App() {
   const [errorMsg, setErrorMsg] = useState('');
   const [showExplanation, setShowExplanation] = useState(false);
 
-  // Core Theme Logic
+  // Theme Management
   useEffect(() => {
     const root = document.documentElement;
     if (theme === 'dark') root.classList.add('dark');
@@ -261,7 +212,7 @@ export default function App() {
     setTimeout(() => setToast(null), 4000);
   };
 
-  // Auth Lifecycle
+  // Auth Initialization
   useEffect(() => {
     const initAuth = async () => {
       try {
@@ -270,14 +221,16 @@ export default function App() {
         } else {
           await signInAnonymously(auth);
         }
-      } catch (e) { console.error("Auth init failed", e); }
+      } catch (e) { 
+        console.error("Auth initialization failed", e); 
+      }
     };
     initAuth();
     const unsubscribe = onAuthStateChanged(auth, setUser);
     return () => unsubscribe();
   }, []);
 
-  // Sync History
+  // Real-time History Sync
   useEffect(() => {
     if (!user) return;
     const q = query(
@@ -287,7 +240,7 @@ export default function App() {
     );
     const unsubscribe = onSnapshot(q, (snap) => {
       setHistory(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-    }, (err) => console.error("History fetch error", err));
+    }, (err) => console.error("History sync error", err));
     return () => unsubscribe();
   }, [user]);
 
@@ -298,7 +251,7 @@ export default function App() {
       setLoginModalOpen(false);
       showToast("Signed in with Google");
     } catch (err) {
-      console.error("Google Auth Error", err);
+      console.error("Google login error", err);
       showToast("Sign-In failed.", 'error');
     }
   };
@@ -308,14 +261,16 @@ export default function App() {
     try {
       if (isSignUp) {
         await createUserWithEmailAndPassword(auth, email, password);
-        showToast("Account created!");
+        showToast("Account successfully created!");
       } else {
         await signInWithEmailAndPassword(auth, email, password);
-        showToast("Signed in successfully");
+        showToast("Welcome back!");
       }
       setLoginModalOpen(false);
       setEmail(''); setPassword('');
-    } catch (err) { showToast(err.message, 'error'); }
+    } catch (err) { 
+      showToast(err.message, 'error'); 
+    }
   };
 
   const saveResult = async (score) => {
@@ -329,7 +284,9 @@ export default function App() {
         difficulty: config.difficulty,
         date: serverTimestamp()
       });
-    } catch (e) { console.error("Save error", e); }
+    } catch (e) { 
+      console.error("Result save error", e); 
+    }
   };
 
   const handleFeedbackSubmit = async () => {
@@ -345,14 +302,16 @@ export default function App() {
       showToast("Feedback sent successfully!");
     } catch (e) {
       console.error("Feedback error", e);
-      showToast("Could not send feedback.", "error");
+      showToast("Failed to send feedback.", "error");
     }
   };
 
   const generateQuiz = async () => {
     setIsLoading(true); setView('loading'); setErrorMsg('');
+    
     const fetchWithRetry = async (retries = 5, delay = 1000) => {
       const systemPrompt = `Create a ${config.difficulty.toLowerCase()} difficulty, competition-level practice test for FBLA "${config.topic}". Generate exactly ${config.questionCount} multiple choice questions. Return ONLY raw JSON. Schema: Array<{ question: string, options: string[], correctAnswerIndex: number, explanation: string }>. IMPORTANT: Keep the explanation short (max 2 sentences).`;
+      
       try {
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
           method: 'POST',
@@ -363,7 +322,7 @@ export default function App() {
             generationConfig: { responseMimeType: "application/json" }
           })
         });
-        if (!response.ok) throw new Error("API Error");
+        if (!response.ok) throw new Error("API Connection Error");
         const data = await response.json();
         return JSON.parse(data.candidates[0].content.parts[0].text);
       } catch (err) {
@@ -374,13 +333,14 @@ export default function App() {
         throw err;
       }
     };
+    
     try {
       const questions = await fetchWithRetry();
       setQuizData(questions); setCurrentIndex(0); setAnswers({}); setShowExplanation(false);
       if (config.mode === 'timed') setTimeLeft(config.duration * 60);
       setTimeout(() => { setIsLoading(false); setView('testing'); }, 800);
     } catch (err) {
-      setIsLoading(false); setErrorMsg("Generation failed. Try again."); setView('landing');
+      setIsLoading(false); setErrorMsg("Content generation failed. Please try again."); setView('landing');
     }
   };
 
@@ -397,22 +357,80 @@ export default function App() {
 
   const finishTest = () => {
     setView('results'); setShowExplanation(true);
-    const correct = Object.keys(answers).filter(k => answers[k] === quizData[k].correctAnswerIndex).length;
-    const score = Math.round((correct / quizData.length) * 100);
-    saveResult(score);
+    const correctCount = Object.keys(answers).filter(k => answers[k] === quizData[k].correctAnswerIndex).length;
+    const scoreVal = Math.round((correctCount / quizData.length) * 100);
+    saveResult(scoreVal);
   };
 
   const resetApp = () => {
-    setView('landing'); setQuizData([]); setAnswers({});
+    setView('landing'); setQuizData([]); setAnswers({}); setCurrentIndex(0);
   };
 
-  // --- UI Components ---
+  // --- Views ---
+
+  const LandingView = () => (
+    <div className="max-w-4xl mx-auto w-full px-6 pt-12 md:pt-20 pb-32">
+      <div className="text-center mb-16">
+        <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-zinc-900 dark:text-white mb-6">Master your event.</h1>
+        <p className="text-xl text-zinc-500 dark:text-zinc-400 max-w-lg mx-auto leading-relaxed font-light">Configure your custom simulation environment.</p>
+      </div>
+
+      <div className="grid md:grid-cols-12 gap-8">
+        <div className="md:col-start-3 md:col-span-8 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-8 shadow-xl transition-all">
+          {errorMsg && (
+            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm rounded-xl border border-red-100 dark:border-red-900/30 flex items-center gap-3">
+              <Icon name="alert-triangle" size={18} /> {errorMsg}
+            </div>
+          )}
+          
+          <div className="space-y-8">
+            <div className="space-y-3">
+              <label className="block text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest ml-1">Topic</label>
+              <SearchableSelect options={FBLA_TOPICS} value={config.topic} onChange={(val) => setConfig({...config, topic: val})} placeholder="Type topic..." />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+               <div>
+                 <label className="block text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest ml-1 mb-2">Mode</label>
+                 <div className="grid grid-cols-2 gap-2">
+                    {[{ id: 'practice', icon: 'zap', label: 'Practice' }, { id: 'timed', icon: 'clock', label: 'Ranked' }].map(m => (
+                      <button 
+                        key={m.id}
+                        onClick={() => setConfig({ ...config, mode: m.id })}
+                        className={`p-3 rounded-xl border text-center transition-all ${config.mode === m.id ? 'border-zinc-900 dark:border-zinc-100 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900' : 'border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400'}`}
+                      >
+                        <div className="flex flex-col items-center gap-1">
+                          <Icon name={m.icon} size={18} />
+                          <span className="font-bold text-xs">{m.label}</span>
+                        </div>
+                      </button>
+                    ))}
+                 </div>
+               </div>
+
+               <div>
+                 <label className="block text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest ml-1 mb-2">Difficulty</label>
+                 <div className="grid grid-cols-3 gap-2">
+                    {['Easy', 'Medium', 'Hard'].map(d => (
+                      <button key={d} onClick={() => setConfig({ ...config, difficulty: d })} className={`p-3 rounded-xl border text-center transition-all ${config.difficulty === d ? 'border-zinc-900 dark:border-zinc-100 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900' : 'border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400'}`}>
+                        <span className="font-bold text-xs">{d}</span>
+                      </button>
+                    ))}
+                 </div>
+               </div>
+            </div>
+
+            <Button onClick={generateQuiz} disabled={!config.topic} className="w-full py-5 text-base mt-4">Initialize Session <Icon name="arrow-right" size={18} /></Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
   const QuizView = () => {
     const currentQ = quizData[currentIndex];
-    const progress = ((currentIndex) / quizData.length) * 100;
     return (
-      <div className="max-w-3xl mx-auto w-full px-6 pt-8 pb-32 animate-enter">
+      <div className="max-w-3xl mx-auto w-full px-6 pt-8 pb-32">
         <div className="flex items-center justify-between mb-10 sticky top-4 z-20 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md p-4 rounded-2xl border border-zinc-100 dark:border-zinc-800 shadow-sm">
           <button onClick={resetApp} className="text-zinc-400 hover:text-red-500 transition-colors flex items-center gap-2 text-sm font-medium"><Icon name="x" size={18} /> Abort</button>
           <div className="flex items-center gap-6 text-sm font-mono font-medium text-zinc-500 dark:text-zinc-400">
@@ -427,15 +445,15 @@ export default function App() {
               const selected = answers[currentIndex] === idx;
               const correct = currentQ.correctAnswerIndex === idx;
               const revealed = config.mode === 'practice' && showExplanation;
-              let style = "border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:border-zinc-400 dark:hover:border-zinc-600"; 
-              if (selected) style = "border-zinc-900 dark:border-zinc-100 bg-black dark:bg-white text-white dark:text-black";
+              let styleClass = "border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:border-zinc-400 dark:hover:border-zinc-600"; 
+              if (selected) styleClass = "border-zinc-900 dark:border-zinc-100 bg-black dark:bg-white text-white dark:text-black";
               if (revealed) {
-                if (correct) style = "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-900 dark:text-emerald-400";
-                else if (selected && !correct) style = "border-red-300 bg-red-50 dark:bg-red-900/20 text-red-900 dark:text-red-400 opacity-75";
-                else style = "opacity-50 border-zinc-100 dark:border-zinc-800";
+                if (correct) styleClass = "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-900 dark:text-emerald-400";
+                else if (selected && !correct) styleClass = "border-red-300 bg-red-50 dark:bg-red-900/20 text-red-900 dark:text-red-400 opacity-75";
+                else styleClass = "opacity-50 border-zinc-100 dark:border-zinc-800";
               }
               return (
-                <button key={idx} onClick={() => { if(!(config.mode === 'practice' && showExplanation)) { setAnswers(p => ({...p, [currentIndex]: idx})); if(config.mode === 'practice') setShowExplanation(true); }}} disabled={revealed} className={`w-full p-6 text-left rounded-xl border transition-all flex items-center justify-between ${style}`}>
+                <button key={idx} onClick={() => { if(!(config.mode === 'practice' && showExplanation)) { setAnswers(p => ({...p, [currentIndex]: idx})); if(config.mode === 'practice') setShowExplanation(true); }}} disabled={revealed} className={`w-full p-6 text-left rounded-xl border transition-all flex items-center justify-between ${styleClass}`}>
                   <div className="flex items-center gap-5">
                     <span className={`w-8 h-8 rounded-lg border flex items-center justify-center text-xs font-bold shrink-0 ${selected ? 'bg-white/20' : 'border-zinc-200 dark:border-zinc-700 text-zinc-400'}`}>{['A','B','C','D'][idx]}</span>
                     <span className="text-base md:text-lg">{opt}</span>
@@ -461,12 +479,85 @@ export default function App() {
     );
   };
 
+  const Sidebar = ({ isOpen, onClose, user, history, onLoadTopic }) => (
+    <>
+      {isOpen && <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40" onClick={onClose}></div>}
+      <div className={`fixed inset-y-0 right-0 w-80 bg-white dark:bg-zinc-950 border-l border-zinc-200 dark:border-zinc-800 z-50 transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'} shadow-2xl`}>
+        <div className="p-6 h-full flex flex-col">
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-xl font-bold dark:text-white">Your History</h2>
+            <button onClick={onClose}><Icon name="x" size={24} className="text-zinc-400 hover:text-zinc-900 dark:hover:text-white" /></button>
+          </div>
+          {!user ? (
+            <div className="text-center py-10">
+              <Icon name="user-x" size={32} className="text-zinc-400 mx-auto mb-4" />
+              <p className="text-zinc-500 text-sm">Waiting for login...</p>
+            </div>
+          ) : (
+            <div className="flex-1 overflow-y-auto space-y-4">
+              {history.length === 0 ? (
+                <p className="text-zinc-400 text-center text-sm italic py-10">No history found.</p>
+              ) : (
+                history.map((item) => (
+                  <div key={item.id} className="p-4 rounded-xl border border-zinc-100 dark:border-zinc-900 bg-zinc-50 dark:bg-zinc-900/50 cursor-pointer" onClick={() => { onLoadTopic(item.topic); onClose(); }}>
+                    <div className="flex justify-between mb-2">
+                      <span className="font-bold text-sm text-zinc-900 dark:text-white truncate">{item.topic}</span>
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded ${item.score >= 80 ? 'bg-emerald-100 text-emerald-700' : 'bg-zinc-200'}`}>{item.score}%</span>
+                    </div>
+                    <div className="text-xs text-zinc-400 flex items-center gap-2">
+                      <Icon name="calendar" size={12} />
+                      {item.date ? new Date(item.date.seconds * 1000).toLocaleDateString() : 'Just now'}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+          {user && <button onClick={() => signOut(auth)} className="mt-auto w-full py-3 bg-red-50 text-red-600 rounded-xl font-bold flex items-center justify-center gap-2"><Icon name="log-out" size={18} /> Sign Out</button>}
+        </div>
+      </div>
+    </>
+  );
+
+  const ResultsView = ({ score, correct, total, onReview, onReset }) => (
+    <div className="max-w-2xl mx-auto w-full px-6 pt-20 text-center pb-20">
+      <h2 className="text-5xl font-bold tracking-tighter text-zinc-900 dark:text-white mb-4">{score}%</h2>
+      <p className="text-zinc-500 dark:text-zinc-400 mb-12 text-lg">You scored <strong className="text-zinc-900 dark:text-zinc-200">{correct}</strong> / {total}.</p>
+      <div className="grid grid-cols-2 gap-5">
+        <Button variant="secondary" onClick={onReview}>Review</Button>
+        <Button onClick={onReset}>New Session</Button>
+      </div>
+    </div>
+  );
+
+  const SplashScreen = ({ onComplete }) => {
+    useEffect(() => {
+      const timer = setTimeout(onComplete, 2200);
+      return () => clearTimeout(timer);
+    }, [onComplete]);
+    return (
+      <div className="fixed inset-0 z-[100] bg-black flex items-center justify-center">
+        <div className="relative z-10 flex flex-col items-center">
+          <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mb-6">
+            <Icon name="zap" size={40} className="text-black" />
+          </div>
+          <h1 className="text-4xl font-bold text-white tracking-tighter">FBLA PREP</h1>
+        </div>
+      </div>
+    );
+  };
+
   if (showSplash) return <SplashScreen onComplete={() => setShowSplash(false)} />;
+
+  const currentScoreData = quizData.length > 0 ? {
+    correct: Object.keys(answers).filter(k => answers[k] === quizData[k].correctAnswerIndex).length,
+    percent: Math.round((Object.keys(answers).filter(k => answers[k] === quizData[k].correctAnswerIndex).length / quizData.length) * 100)
+  } : { correct: 0, percent: 0 };
 
   return (
     <div className={`flex-grow flex flex-col min-h-screen bg-zinc-50 text-zinc-900 dark:bg-black dark:text-zinc-100 transition-colors ${theme}`}>
       {toast && (
-        <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-[70] px-6 py-3 rounded-xl shadow-2xl bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 animate-enter">
+        <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-[70] px-6 py-3 rounded-xl shadow-2xl bg-zinc-900 text-white dark:bg-white dark:text-zinc-900">
           <span className="font-medium text-sm">{toast.msg}</span>
         </div>
       )}
@@ -482,7 +573,7 @@ export default function App() {
                 <span className="text-[10px] font-bold tracking-[0.3em] text-zinc-400 dark:text-zinc-500">PREP</span>
               </div>
             </div>
-            <a href="https://aahanjain.com/fbla_guide.html" target="_blank" className="hidden lg:flex items-center gap-2 text-sm font-bold text-blue-600 hover:text-blue-700 transition-colors">
+            <a href="https://aahanjain.com/fbla_guide.html" target="_blank" rel="noopener noreferrer" className="hidden lg:flex items-center gap-2 text-sm font-bold text-blue-600 hover:text-blue-700 transition-colors">
                 <Icon name="info" size={16} /> Competition Guide
             </a>
         </div>
@@ -526,7 +617,7 @@ export default function App() {
         {view === 'landing' && <LandingView config={config} setConfig={setConfig} errorMsg={errorMsg} generateQuiz={generateQuiz} />}
         {view === 'loading' && <div className="flex items-center justify-center min-h-[60vh]"><div className="w-12 h-12 border-4 border-zinc-900 border-t-transparent animate-spin rounded-full"></div></div>}
         {view === 'testing' && <QuizView />}
-        {view === 'results' && <ResultsView score={Math.round((Object.keys(answers).filter(k => answers[k] === quizData[k].correctAnswerIndex).length / quizData.length) * 100)} correct={Object.keys(answers).filter(k => answers[k] === quizData[k].correctAnswerIndex).length} total={quizData.length} onReview={() => { setView('testing'); setCurrentIndex(0); }} onReset={resetApp} />}
+        {view === 'results' && <ResultsView score={currentScoreData.percent} correct={currentScoreData.correct} total={quizData.length} onReview={() => { setView('testing'); setCurrentIndex(0); }} onReset={resetApp} />}
       </main>
 
       <footer className="bg-white dark:bg-zinc-950 border-t py-12 px-6 mt-auto">
@@ -536,82 +627,12 @@ export default function App() {
                 <span className="text-sm text-zinc-500">Master your competitive events.</span>
             </div>
             <div className="flex items-center gap-8 text-sm font-medium">
-                <a href="https://aahanjain.com/fbla_guide.html" target="_blank" className="text-blue-600 hover:underline">Official Competition Guide</a>
+                <a href="https://aahanjain.com/fbla_guide.html" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Official Competition Guide</a>
                 <button onClick={() => setFeedbackOpen(true)} className="text-zinc-500 hover:text-zinc-900">Feedback</button>
-                <a href="https://fbla.org" target="_blank" className="text-zinc-500 hover:text-zinc-900">National FBLA</a>
+                <a href="https://fbla.org" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-zinc-900">National FBLA</a>
             </div>
         </div>
       </footer>
     </div>
   );
 }
-
-// --- Specific Sub-Components ---
-
-const ResultsView = ({ score, correct, total, onReview, onReset }) => (
-  <div className="max-w-2xl mx-auto w-full px-6 pt-20 text-center animate-enter pb-20">
-    <h2 className="text-5xl font-bold tracking-tighter text-zinc-900 dark:text-white mb-4">{score}%</h2>
-    <p className="text-zinc-500 dark:text-zinc-400 mb-12 text-lg">You scored <strong className="text-zinc-900 dark:text-zinc-200">{correct}</strong> / {total}.</p>
-    <div className="grid grid-cols-2 gap-5">
-      <Button variant="secondary" onClick={onReview}>Review</Button>
-      <Button onClick={onReset}>New Session</Button>
-    </div>
-  </div>
-);
-
-const Sidebar = ({ isOpen, onClose, user, history, onLoadTopic }) => (
-  <>
-    {isOpen && <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40" onClick={onClose}></div>}
-    <div className={`fixed inset-y-0 right-0 w-80 bg-white dark:bg-zinc-950 border-l border-zinc-200 dark:border-zinc-800 z-50 transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'} shadow-2xl`}>
-      <div className="p-6 h-full flex flex-col">
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-xl font-bold dark:text-white">Your History</h2>
-          <button onClick={onClose}><Icon name="x" size={24} className="text-zinc-400 hover:text-zinc-900 dark:hover:text-white" /></button>
-        </div>
-        {!user ? (
-          <div className="text-center py-10">
-            <Icon name="user-x" size={32} className="text-zinc-400 mx-auto mb-4" />
-            <p className="text-zinc-500 text-sm">Waiting for login...</p>
-          </div>
-        ) : (
-          <div className="flex-1 overflow-y-auto space-y-4">
-            {history.length === 0 ? (
-              <p className="text-zinc-400 text-center text-sm italic py-10">No history found.</p>
-            ) : (
-              history.map((item) => (
-                <div key={item.id} className="p-4 rounded-xl border border-zinc-100 dark:border-zinc-900 bg-zinc-50 dark:bg-zinc-900/50 cursor-pointer" onClick={() => { onLoadTopic(item.topic); onClose(); }}>
-                  <div className="flex justify-between mb-2">
-                    <span className="font-bold text-sm text-zinc-900 dark:text-white truncate">{item.topic}</span>
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded ${item.score >= 80 ? 'bg-emerald-100 text-emerald-700' : 'bg-zinc-200'}`}>{item.score}%</span>
-                  </div>
-                  <div className="text-xs text-zinc-400 flex items-center gap-2">
-                    <Icon name="calendar" size={12} />
-                    {item.date ? new Date(item.date.seconds * 1000).toLocaleDateString() : 'Just now'}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        )}
-        {user && <button onClick={() => signOut(auth)} className="mt-auto w-full py-3 bg-red-50 text-red-600 rounded-xl font-bold flex items-center justify-center gap-2"><Icon name="log-out" size={18} /> Sign Out</button>}
-      </div>
-    </div>
-  </>
-);
-
-const SplashScreen = ({ onComplete }) => {
-  useEffect(() => {
-    const timer = setTimeout(onComplete, 2200);
-    return () => clearTimeout(timer);
-  }, [onComplete]);
-  return (
-    <div className="fixed inset-0 z-[100] bg-black flex items-center justify-center">
-      <div className="relative z-10 flex flex-col items-center animate-enter">
-        <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mb-6 animate-float">
-          <Icon name="zap" size={40} className="text-black" />
-        </div>
-        <h1 className="text-4xl font-bold text-white tracking-tighter">FBLA PREP</h1>
-      </div>
-    </div>
-  );
-};
