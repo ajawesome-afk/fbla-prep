@@ -374,6 +374,7 @@ const App = () => {
               
               {!user || user.isAnonymous ? (
                 <div className="text-center py-6 px-2">
+                  <a href="/fbla_guide.html">Learn about FBLA Competitions</a>
                   <p className="text-xs text-slate-400 mb-4 leading-relaxed">Sign in with Google to save your scores and study progress permanently.</p>
                   <button onClick={handleGoogleSignIn} className="w-full py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold flex items-center justify-center gap-2 hover:bg-slate-50 transition-all shadow-sm">
                     <LogIn className="w-4 h-4 text-[#4285F4]" /> Sign In
@@ -528,7 +529,7 @@ const App = () => {
         )}
       </main>
       <footer className="text-center py-10 text-slate-400 text-xs">
-        <p className="font-bold mb-2 uppercase tracking-tighter">&copy; 2026 aahanjain.com/fbla • Master Your Competition</p>
+        <p className="font-bold mb-2 uppercase tracking-tighter">&copy; 2026 fbla.aahanjain.com • Master Your Competition  • <a href="/fbla_guide.html">Learn about FBLA Competitions</a></p>
       </footer>
     </div>
   );
