@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FBLA High School Competitive Events Guide</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .fbla-blue { background-color: #004a99; }
+        .fbla-text-blue { color: #004a99; }
+        .fbla-gold { background-color: #f2a900; }
+        .transition-section { transition: opacity 0.3s ease-in-out; }
+        .hidden-section { display: none; opacity: 0; }
+        .active-link { border-bottom: 2px solid #f2a900; color: #f2a900 !important; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900">
+
+    <!-- Navigation -->
+    <nav class="fbla-blue text-white sticky top-0 z-50 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <span class="text-xl font-bold tracking-wider">FBLA <span class="text-yellow-400">COMPETITIVE</span></span>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <button onclick="showSection('home')" id="nav-home" class="px-3 py-2 rounded-md text-sm font-medium hover:text-yellow-400 transition">Overview</button>
+                        <button onclick="showSection('categories')" id="nav-categories" class="px-3 py-2 rounded-md text-sm font-medium hover:text-yellow-400 transition">Categories</button>
+                        <button onclick="showSection('directory')" id="nav-directory" class="px-3 py-2 rounded-md text-sm font-medium hover:text-yellow-400 transition">Event Directory</button>
+                        <button onclick="showSection('prep')" id="nav-prep" class="px-3 py-2 rounded-md text-sm font-medium hover:text-yellow-400 transition">How to Prepare</button>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="text-white focus:outline-none">
+                        <i class="fas fa-bars text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-blue-900 px-2 pt-2 pb-3 space-y-1 sm:px-3">
+            <button onclick="showSection('home')" class="block px-3 py-2 rounded-md text-base font-medium text-white w-full text-left">Overview</button>
+            <button onclick="showSection('categories')" class="block px-3 py-2 rounded-md text-base font-medium text-white w-full text-left">Categories</button>
+            <button onclick="showSection('directory')" class="block px-3 py-2 rounded-md text-base font-medium text-white w-full text-left">Event Directory</button>
+            <button onclick="showSection('prep')" class="block px-3 py-2 rounded-md text-base font-medium text-white w-full text-left">How to Prepare</button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+        <!-- SECTION: HOME / OVERVIEW -->
+        <section id="home" class="transition-section">
+            <div class="text-center mb-16">
+                <h1 class="text-4xl md:text-6xl font-extrabold fbla-text-blue mb-4">Elevate Your Future</h1>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">The National Awards Program (NAP) recognizes and rewards excellence in a broad range of business and career-related areas. It's your time to shine.</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div>
+                    <h2 class="text-3xl font-bold mb-6">Why Compete in FBLA?</h2>
+                    <ul class="space-y-4">
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mt-1 mr-3"></i>
+                            <span><strong>Career Development:</strong> Explore specific career clusters like Finance, Tech, and Marketing.</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mt-1 mr-3"></i>
+                            <span><strong>Networking:</strong> Meet students and business professionals at District, State, and National levels.</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mt-1 mr-3"></i>
+                            <span><strong>Scholarships:</strong> Many top winners earn access to exclusive educational funding and internships.</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mt-1 mr-3"></i>
+                            <span><strong>Leadership:</strong> Develop the soft skills needed to lead in the 21st-century workplace.</span>
+                        </li>
+                    </ul>
+                    <button onclick="showSection('directory')" class="mt-8 fbla-blue text-white px-8 py-3 rounded-full font-semibold hover:bg-blue-800 transition shadow-md">
+                        Explore All Events
+                    </button>
+                </div>
+                <div class="bg-blue-100 rounded-2xl p-8 flex justify-center items-center">
+                    <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=800" alt="Students competing" class="rounded-xl shadow-lg">
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: CATEGORIES -->
+        <section id="categories" class="hidden-section transition-section">
+            <h2 class="text-3xl font-bold fbla-text-blue mb-8 text-center">Understand Competition Formats</h2>
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Objective Test -->
+                <div class="bg-white p-6 rounded-xl shadow-md border-t-4 border-blue-600">
+                    <div class="text-blue-600 mb-4"><i class="fas fa-file-alt text-3xl"></i></div>
+                    <h3 class="text-xl font-bold mb-2">Objective Tests</h3>
+                    <p class="text-gray-600 text-sm">A 100-question multiple-choice exam taken online. Covers fundamental concepts in specific business areas.</p>
+                    <p class="mt-4 text-xs font-semibold text-blue-800 uppercase tracking-wider">Example: Accounting I, Business Law</p>
+                </div>
+                <!-- Role Play -->
+                <div class="bg-white p-6 rounded-xl shadow-md border-t-4 border-yellow-500">
+                    <div class="text-yellow-500 mb-4"><i class="fas fa-users-cog text-3xl"></i></div>
+                    <h3 class="text-xl font-bold mb-2">Role Play Events</h3>
+                    <p class="text-gray-600 text-sm">Combines an objective test with a live scenario. You have limited time to solve a problem and present it to a judge.</p>
+                    <p class="mt-4 text-xs font-semibold text-yellow-800 uppercase tracking-wider">Example: Entrepreneurship, Management</p>
+                </div>
+                <!-- Presentation -->
+                <div class="bg-white p-6 rounded-xl shadow-md border-t-4 border-green-500">
+                    <div class="text-green-500 mb-4"><i class="fas fa-chalkboard-teacher text-3xl"></i></div>
+                    <h3 class="text-xl font-bold mb-2">Presentation</h3>
+                    <p class="text-gray-600 text-sm">Prepare a speech or project in advance. Use visual aids and technology to convince a panel of judges.</p>
+                    <p class="mt-4 text-xs font-semibold text-green-800 uppercase tracking-wider">Example: Public Speaking, Digital Video</p>
+                </div>
+                <!-- Production -->
+                <div class="bg-white p-6 rounded-xl shadow-md border-t-4 border-purple-500">
+                    <div class="text-purple-500 mb-4"><i class="fas fa-code text-3xl"></i></div>
+                    <h3 class="text-xl font-bold mb-2">Production</h3>
+                    <p class="text-gray-600 text-sm">Skills-based testing involving actual software use (Word, Excel, Coding) to produce specific deliverables.</p>
+                    <p class="mt-4 text-xs font-semibold text-purple-800 uppercase tracking-wider">Example: Computer Applications, Programming</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: DIRECTORY -->
+        <section id="directory" class="hidden-section transition-section">
+            <div class="flex flex-col md:flex-row md:items-center justify-between mb-8">
+                <h2 class="text-3xl font-bold fbla-text-blue">Event Directory</h2>
+                <div class="mt-4 md:mt-0 relative">
+                    <input type="text" id="event-search" onkeyup="filterEvents()" placeholder="Search events (e.g. Accounting)..." class="pl-10 pr-4 py-2 border rounded-full w-full md:w-64 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap gap-2 mb-8">
+                <button onclick="filterType('All')" class="filter-btn px-4 py-1 rounded-full bg-blue-100 text-blue-800 text-sm font-medium hover:bg-blue-200">All</button>
+                <button onclick="filterType('Objective Test')" class="filter-btn px-4 py-1 rounded-full bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200">Objective Test</button>
+                <button onclick="filterType('Presentation')" class="filter-btn px-4 py-1 rounded-full bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200">Presentation</button>
+                <button onclick="filterType('Role Play')" class="filter-btn px-4 py-1 rounded-full bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200">Role Play</button>
+            </div>
+
+            <div id="events-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Data injected by JS -->
+            </div>
+        </section>
+
+        <!-- SECTION: PREPARATION -->
+        <section id="prep" class="hidden-section transition-section">
+            <h2 class="text-3xl font-bold fbla-text-blue mb-8 text-center">Mastering Your Competition</h2>
+            
+            <div class="space-y-12">
+                <!-- Step 1 -->
+                <div class="flex flex-col md:flex-row gap-8 items-center">
+                    <div class="md:w-1/2">
+                        <span class="text-6xl font-black text-blue-100 block">01</span>
+                        <h3 class="text-2xl font-bold mt-[-2rem] mb-4">Read the Guidelines</h3>
+                        <p class="text-gray-600 mb-4">Every event has a specific set of rules, scoring rubrics, and competencies. Don't waste time studying the wrong material. Download the 2025-2026 Competitive Events Guidelines immediately.</p>
+                        <a href="https://www.fbla.org/high-school/competitive-events/" target="_blank" class="text-blue-600 font-semibold hover:underline">Official FBLA Guidelines <i class="fas fa-external-link-alt text-xs"></i></a>
+                    </div>
+                    <div class="md:w-1/2 bg-white p-6 rounded-xl shadow-inner border border-gray-100">
+                        <h4 class="font-bold mb-2">Checklist:</h4>
+                        <ul class="text-sm space-y-2 text-gray-700">
+                            <li><i class="far fa-square mr-2"></i> Is this Individual or Team?</li>
+                            <li><i class="far fa-square mr-2"></i> Are there grade restrictions (9-10 only)?</li>
+                            <li><i class="far fa-square mr-2"></i> What is the dress code requirements?</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="flex flex-col md:flex-row-reverse gap-8 items-center">
+                    <div class="md:w-1/2">
+                        <span class="text-6xl font-black text-blue-100 block text-right">02</span>
+                        <h3 class="text-2xl font-bold mt-[-2rem] mb-4 text-right">Practice and Simulate</h3>
+                        <p class="text-gray-600 mb-4 text-right">For <strong>Objective Tests</strong>, use Quizlet and past FBLA practice tests. For <strong>Role Plays</strong>, practice thinking on your feet with a 10-minute timer. For <strong>Presentations</strong>, record yourself and watch for filler words (um, ah, like).</p>
+                    </div>
+                    <div class="md:w-1/2 grid grid-cols-2 gap-4">
+                        <div class="bg-fbla-blue text-white p-4 rounded-lg text-center">
+                            <i class="fas fa-clock text-2xl mb-2"></i>
+                            <p class="text-xs uppercase">Time Management</p>
+                        </div>
+                        <div class="bg-fbla-gold text-white p-4 rounded-lg text-center">
+                            <i class="fas fa-user-tie text-2xl mb-2"></i>
+                            <p class="text-xs uppercase">Professionalism</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="bg-blue-900 text-white p-10 rounded-2xl shadow-2xl text-center">
+                    <h3 class="text-3xl font-bold mb-4">Join the FBLA App</h3>
+                    <p class="mb-8 opacity-80 max-w-2xl mx-auto">Sync your competition schedule, track your scores, and connect with your chapter at fbla.aahanjain.com. Stay updated on deadlines and national announcements.</p>
+                    <a href="https://fbla.aahanjain.com" class="bg-white text-blue-900 px-8 py-3 rounded-full font-bold hover:bg-gray-100 transition inline-block">Visit the App</a>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-100 border-t py-12">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-gray-500 text-sm">© 2026 FBLA Competitive Events Guide. Created for Aahan Jain's FBLA App.</p>
+            <p class="text-gray-400 text-xs mt-2 italic">Note: This is an informational resource. Always verify official rules at fbla.org.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Multi-page navigation logic
+        function showSection(sectionId) {
+            // Hide all sections
+            const sections = ['home', 'categories', 'directory', 'prep'];
+            sections.forEach(id => {
+                const el = document.getElementById(id);
+                el.classList.add('hidden-section');
+                el.style.display = 'none';
+                
+                // Remove active class from nav
+                const navBtn = document.getElementById(`nav-${id}`);
+                if (navBtn) navBtn.classList.remove('active-link');
+            });
+
+            // Show target section
+            const target = document.getElementById(sectionId);
+            target.style.display = 'block';
+            setTimeout(() => {
+                target.classList.remove('hidden-section');
+            }, 10);
+
+            // Set active nav link
+            const activeBtn = document.getElementById(`nav-${sectionId}`);
+            if (activeBtn) activeBtn.classList.add('active-link');
+
+            // Close mobile menu
+            document.getElementById('mobile-menu').classList.add('hidden');
+            
+            // Scroll to top
+            window.scrollTo(0, 0);
+        }
+
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-button').addEventListener('click', () => {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        });
+
+        // Event Data
+        const events = [
+            { name: "Accounting I", type: "Objective Test", cluster: "Finance", desc: "Fundamental accounting principles and financial statements." },
+            { name: "Advertising", type: "Objective Test", cluster: "Marketing", desc: "Branding, media planning, and consumer behavior." },
+            { name: "Agribusiness", type: "Objective Test", cluster: "Management", desc: "Business principles applied to the agriculture industry." },
+            { name: "Banking & Financial Systems", type: "Role Play", cluster: "Finance", desc: "Analyze financial institution operations and compliance." },
+            { name: "Broadcast Journalism", type: "Presentation", cluster: "Communications", desc: "Script and produce a professional news segment." },
+            { name: "Business Communication", type: "Objective Test", cluster: "Management", desc: "Written and verbal workplace communication etiquette." },
+            { name: "Business Ethics", type: "Presentation", cluster: "Management", desc: "Analyze and solve ethical dilemmas in business." },
+            { name: "Business Law", type: "Objective Test", cluster: "Legal", desc: "Contracts, employment law, and consumer protection." },
+            { name: "Business Management", type: "Role Play", cluster: "Management", desc: "Apply management principles to real-world scenarios." },
+            { name: "Business Plan", type: "Presentation", cluster: "Entrepreneurship", desc: "Comprehensive plan for launching a new business concept." },
+            { name: "Coding & Programming", type: "Presentation", cluster: "Technology", desc: "Design and develop a standalone software application." },
+            { name: "Computer Applications", type: "Production", cluster: "Technology", desc: "Skills test using office software for business tasks." },
+            { name: "Computer Game & Simulation", type: "Presentation", cluster: "Technology", desc: "Develop an interactive game or educational simulation." },
+            { name: "Cybersecurity", type: "Objective Test", cluster: "Technology", desc: "Protecting systems from digital threats and malware." },
+            { name: "Data Science & AI", type: "Objective Test", cluster: "Technology", desc: "Principles of data analysis and machine learning." },
+            { name: "Digital Animation", type: "Presentation", cluster: "Technology", desc: "Design and present an original animated video." },
+            { name: "Entrepreneurship", type: "Role Play", cluster: "Entrepreneurship", desc: "Skills for starting and managing a successful business." },
+            { name: "Journalism", type: "Objective Test", cluster: "Communications", desc: "Media ethics and news reporting principles." },
+            { name: "Marketing", type: "Role Play", cluster: "Marketing", desc: "Market research, branding, and customer engagement." },
+            { name: "Public Speaking", type: "Presentation", cluster: "Communications", desc: "Prepare and deliver a 5-minute business-themed speech." }
+        ];
+
+        let currentFilter = 'All';
+
+        function renderEvents(filterText = '', typeFilter = 'All') {
+            const grid = document.getElementById('events-grid');
+            grid.innerHTML = '';
+            
+            const filtered = events.filter(e => {
+                const matchesSearch = e.name.toLowerCase().includes(filterText.toLowerCase()) || e.desc.toLowerCase().includes(filterText.toLowerCase());
+                const matchesType = typeFilter === 'All' || e.type === typeFilter;
+                return matchesSearch && matchesType;
+            });
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '<p class="col-span-full text-center py-12 text-gray-500">No events found matching your criteria.</p>';
+                return;
+            }
+
+            filtered.forEach(e => {
+                const card = document.createElement('div');
+                card.className = "bg-white p-5 rounded-lg shadow hover:shadow-lg transition border border-gray-100";
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-xs font-bold uppercase tracking-widest text-blue-500">${e.type}</span>
+                        <span class="text-xs bg-gray-100 px-2 py-1 rounded">${e.cluster}</span>
+                    </div>
+                    <h4 class="font-bold text-lg mb-2">${e.name}</h4>
+                    <p class="text-sm text-gray-600 line-clamp-2">${e.desc}</p>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterEvents() {
+            const search = document.getElementById('event-search').value;
+            renderEvents(search, currentFilter);
+        }
+
+        function filterType(type) {
+            currentFilter = type;
+            
+            // UI Feedback
+            const btns = document.querySelectorAll('.filter-btn');
+            btns.forEach(btn => {
+                if (btn.innerText === type) {
+                    btn.classList.add('bg-blue-600', 'text-white');
+                    btn.classList.remove('bg-gray-100', 'text-gray-700');
+                } else {
+                    btn.classList.remove('bg-blue-600', 'text-white');
+                    btn.classList.add('bg-gray-100', 'text-gray-700');
+                }
+            });
+            
+            filterEvents();
+        }
+
+        // Initialize
+        window.onload = () => {
+            showSection('home');
+            renderEvents();
+        };
+    </script>
+</body>
+</html>
