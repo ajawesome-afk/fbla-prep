@@ -52,7 +52,7 @@ const FBLA_TOPICS = [
   "Retail Management", "Securities & Investments"
 ];
 
-// --- FIREBASE INITIALIZATION ---
+// --- FIREBASE INITIALIZATION ----
 const firebaseConfig = import.meta.env.FIREBASE_CONFIG;
 
 let auth, db, appId;
