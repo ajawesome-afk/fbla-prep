@@ -31,14 +31,13 @@ import {
  * 'firebaseConfig' is parsed from the environment-provided global variable.
  */
 //const firebaseConfig = JSON.parse(__firebase_config);
-
+//const apiKey = ""; 
 const appId = typeof __app_id !== 'undefined' ? __app_id : 'fbla-prep-v1';
 
 // --- Configuration ---
 const firebaseConfig = import.meta.env.FIREBASE_CONFIG;
-
-//const appId = typeof __app_id !== 'undefined' ? __app_id : 'fbla-prep-v1';
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY; // Provided by environment
+//const appId = typeof __app_id !== 'undefined' ? __app_id : 'fbla-prep-v1';
 
 
 // Initialize Firebase
